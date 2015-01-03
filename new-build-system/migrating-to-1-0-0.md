@@ -1,0 +1,1 @@
+﻿<http://tools.android.com/tech-docs/new-build-system/migrating-to-1-0-0>

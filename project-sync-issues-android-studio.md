@@ -1,0 +1,1 @@
+﻿<http://tools.android.com/tech-docs/project-sync-issues-android-studio>

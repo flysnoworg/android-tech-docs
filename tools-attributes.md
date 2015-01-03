@@ -1,0 +1,1 @@
+﻿<http://tools.android.com/tech-docs/tools-attributes>
