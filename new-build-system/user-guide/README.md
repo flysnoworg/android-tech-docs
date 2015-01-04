@@ -1,22 +1,22 @@
 ﻿目录
 -----
 
-* [1 介绍](#1-介绍)
-    * [1.1 新构建系统的目标](#11-新构建系统的目标)
-    * [1.2 Gradle是什么?](#12-Gradle是什么)
-* [2 要求](#2-要求)
-* [3 基础项目](#3-基础项目)
-    * [3.1 基本的build文件](#31-基本的build文件)
-    * [3.2 项目结构](#32-项目结构)
-        * [3.2.1 配置结构](#321-配置结构)
-    * [3.3 构建任务](#33-构建任务)
-        * [3.3.1 通用任务](#331-通用任务)
-        * [3.3.2 Java项目任务](#332-Java项目任务)
-        * [3.3.3 Android任务](#333-Android任务)
-    * [3.4 自定义构建](#34-自定义构建)
-        * [3.4.1 Manifest选项](#341-Manifest选项)
-        * [3.4.2 Build Types](#TOC-Build-Types)
-        * [3.4.3 Signing Configurations](#TOC-Signing-Configurations)
+* [1 介绍](#1)
+    * [1.1 新构建系统的目标](#11)
+    * [1.2 Gradle是什么?](#12)
+* [2 要求](#2)
+* [3 基础项目](#3)
+    * [3.1 基本的build文件](#31)
+    * [3.2 项目结构](#32)
+        * [3.2.1 配置结构](#321)
+    * [3.3 构建任务](#33)
+        * [3.3.1 通用任务](#331)
+        * [3.3.2 Java项目任务](#332)
+        * [3.3.3 Android任务](#333)
+    * [3.4 自定义构建](#34)
+        * [3.4.1 Manifest选项](#341)
+        * [3.4.2 构建类型](#342)
+        * [3.4.3 Signing Configurations](#343)
         * [3.4.4 Running ProGuard](#TOC-Running-ProGuard)
         * [3.4.5 Shrinking Resources](#TOC-Shrinking-Resources)
 * [4 Dependencies, Android Libraries and Multi-project setup](#TOC-Dependencies-Android-Libraries-and-Multi-project-setup)
@@ -54,9 +54,13 @@
     * [7.3 BuildType and Product Flavor property reference](#TOC-BuildType-and-Product-Flavor-property-reference)
     * [7.4 Using sourceCompatibility 1.7](#TOC-Using-sourceCompatibility-1.7)
 
+<a id="1" href="#1"></a>
+
 ## 1 介绍
 
 本文档适用于Gradle plugin 0.9版本，所以可能和我们1.0之前介绍的老版本有所不同。
+
+<a id="11" href="#11"></a>
 
 ### 1.1 新构建系统的目标
 
@@ -66,6 +70,8 @@
 * 可以很容易的创建应用的衍生版本，所以不管你是创建多个apk，还是不同功能的应用都很方便
 * 可以很容易的配置、扩展以及自定义构建过程
 * 和IDE无缝整合
+
+<a id="12" href="#12"></a>
 
 ### 1.2 Gradle是什么
 
@@ -80,14 +86,20 @@ Gradle的以下特性让我们选择了它：
 * 插件能提供DSL以及API为构建文件使用
 * 良好的工具API以供IDE集成
 
+<a id="2" href="#2"></a>
+
 ## 2 要求
 
 * Gradle 1.10或者1.11或者1.12，并且使用0.11.1版本的插件
 * SDK with Build Tools要求19.0.0，有些功能可能需要更新的版本
 
+<a id="3" href="#3"></a>
+
 ## 3 基础项目
 
 一个Gradle工程是通过名字叫 *build.gradle* 的文件描述其构建过程的，该文字位于工程的根目录下。
+
+<a id="31" href="#31"></a>
 
 ### 3.1 基本的build文件
 
@@ -136,6 +148,8 @@ compilation target和旧构建系统中的project.properties文件里 **target**
 
 **注意：** 你还需要在同目录下添加一个 *local.properties* 文件，并通过 `sdk.dir` 属性配置所需的SDK的路径。除此之外，你也可以设置一个名为 `ANDROID_HOME` 环境变量。这两种方法都差不多，你可以选择自己喜欢的。
 
+<a id="32" href="#32"></a>
+
 ### 3.2 项目结构
 
 上面说的build文件约定了一个默认的文件夹结构。Gradle遵循约定优先于配置的原则，在可能的情况下提供合理的默认值。
@@ -162,6 +176,8 @@ compilation target和旧构建系统中的project.properties文件里 **target**
 * jni/
 
 **注意：** src/androidTest/AndroidManifest.xml是不需要的，它会被自动创建。
+
+<a id="321" href="#321"></a>
 
 #### 3.2.1 配置结构
 
@@ -217,7 +233,11 @@ Android插件也使用相似的语法，但是它有它自己的 *sourceSets* ,�
 
 这是一个迁移的例子(译者注：比如从旧项目结构迁移过来)。
 
+<a id="33" href="#33"></a>
+
 ### 3.3 构建任务
+
+<a id="331" href="#331"></a>
 
 #### 3.3.1 通用任务
 
@@ -248,7 +268,9 @@ gradle tasks --all
 
 **注意：** Gradle会自动监控任务定义的输入和输出。
 
-不做任何改变两次运行 **build** ，Gradle会报告所有任务已经处于UP-TO-DATE状态，这意味着没有什么可做的。这使得任务之间可以正确的相互依赖，又不会导致其他不需要的操作执行。s
+不做任何改变两次运行 **build** ，Gradle会报告所有任务已经处于UP-TO-DATE状态，这意味着没有什么可做的。这使得任务之间可以正确的相互依赖，又不会导致其他不需要的操作执行。
+
+<a id="332" href="#332"></a>
 
 #### 3.3.2 Java项目任务
 
@@ -266,6 +288,8 @@ Java plugin创建了两个主要的任务，主要的引导任务都依赖他们
 通常情况下，你可能只用到 **assemble**  或者 **check** ,其他的任务不会使用。
 
 你可以在[这儿](http://gradle.org/docs/current/userguide/java_plugin.html)看到Java plugin的所有任务列表以及他们的依赖关系
+
+<a id="333" href="#333"></a>
 
 #### 3.3.3 Android任务
 
@@ -312,9 +336,13 @@ gradle assembleRelease
 
 最后，插件会为所有的构建类型( **debug, release, test** )创建install/uninstall任务，也只有他们能被安装（需要签名）。
 
+<a id="34" href="#34"></a>
+
 ### 3.4 自定义构建
 
 Android plugin提供了大量的DSL能够让你直接基于构建系统定制很多事情。
+
+<a id="341" href="#341"></a>
 
 #### 3.4.1 Manifest选项
 
@@ -395,7 +423,90 @@ if (android.defaultConfig.testInstrumentationRunner == null) {
 如果值一直为null，那么在构建的时候，它将会被从第三列中获取的实际的默认值替换，但是在DSL元素中又不包含这个默认值，所以你无法查询到它。
 这是为了防止解析应用的manifest文件，除非真的需要。
 
-#### 3.4.2 Build Types
+<a id="342" href="#342"></a>
+
+#### 3.4.2 构建类型
+
+默认情况下，Android plugin会自动的设置项目，构建release和debug两个版本。
+他们主要的差异主要在于是否可以在设备上调试应用以及APK如何签名。
+
+debug版本会被使用已知的名称/密码自动生成的密钥/证书签名。release版本在构建过程中不会被签名，需要构建后再签名。
+
+这些配置可以通过一个叫 **BuildType** 配置。默认情况下，已经创建了 **debug** 和 **release** 这两个实例。
+
+Android plugin允许自定义这两个示例，并且可以创建其他的 *Build Types* 。这些是可以在 **buildTypes** DSL容器中配置完成:
+
+    android {
+        buildTypes {
+            debug {
+                applicationIdSuffix ".debug"
+            }
+    
+            jnidebug.initWith(buildTypes.debug)
+            jnidebug {
+                packageNameSuffix ".jnidebug"
+                jniDebuggable true
+            }
+        }
+    }
+    
+以上的片段实现了以下几点：
+
+* 配置了默认的 **debug** 构建类型：
+    * 设置包名为<app appliationId>.debug以便可以在同一设备上同时安装 *debug* 和 *release* 两个版本的APK
+* 创建一个叫 **jnidebug** 新的 *Build Types* ，并且配置它作为 **debug** 构建类型的一个副本
+* 然后再配置 **jnidebug** ，启用JNI组件的debug构建，并且添加一个不同的包名后缀
+
+创建一个新的 *Build Types* 很简单，只需要在 **buildTypes** 容器下添加一个元素，然后调用 **initWith()** 或者使用一个闭包配置它。
+
+这里有一些可能用到的属性以及他们的默认值：
+
+属性名|debug时的默认值|release或者其他类型的默认值
+-----|--------------|-----------------------
+**debuggable** |true|false
+**jniDebuggable** |false|false
+**renderscriptDebuggable** |false|false
+**renderscriptOptimLevel** |3|3
+**applicationIdSuffix** |null|null
+**versionNameSuffix** |null|null
+**signingConfig** |android.signingConfigs.debug|null
+**zipAlignEnabled** |false|true
+**minifyEnabled** |false|false
+**proguardFile** |N/A (只能设置)|N/A (只能设置)
+**proguardFiles** |N/A (只能设置)|N/A (只能设置)
+
+除了这些属性外， 代码和资源也会影响到 *Build Types* 。
+对于每一个 Build Type,都会创建一个新的匹配的 *sourceSet* ，默认位置是
+
+    src/<buildtypename>/
+    
+这意味着 *Build Type* 的名字不能是 *main* 和 *androidTest* (这两个已经被插件占用)，并且他们相互之间的名字必须唯一。
+
+和其他的source sets一样，Build Type的source set的位置可以被重定向：
+
+    android {
+        sourceSets.jnidebug.setRoot('foo/jnidebug')
+    }
+    
+此外，对于每一个 *Build Type* ，都会新创建assemble\<BuildTypeName\>任务。
+
+**assembleDebug** 和 **assembleRelease** 这两个任务已经讲过了，这里讲的是他们是从哪来的。是在 **debug** 和 **release** 这两个 *Build Types* 被预先创建的时候。
+
+提示：记得你可以通过输入gradle aJ来运行assembleJnidebug任务哦。
+
+可能使用到的情况：
+
+* 在debug模式下需要，但是在release下不需要的权限
+* 自定义debug的实现
+* 微debug默认使用不同的资源（比如一个资源的值是由签名的证书决定的）
+
+*BuildType* 的代码/资源主要通过以下方式使用：
+
+* manifest被合并进app的manifest
+* 代码仅仅是作为一个额外的source文件夹(译者注：其实和自己新建一个source文件夹，然后在这个文件夹下新建包和类一样)
+* 资源会覆盖main里的资源，替换现有的值
+
+<a id="343" href="#343"></a>
 
 #### 3.4.3 Signing Configurations
 
