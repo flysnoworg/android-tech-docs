@@ -16,43 +16,43 @@
     * [3.4 自定义构建](#34)
         * [3.4.1 Manifest选项](#341)
         * [3.4.2 构建类型](#342)
-        * [3.4.3 Signing Configurations](#343)
-        * [3.4.4 Running ProGuard](#TOC-Running-ProGuard)
-        * [3.4.5 Shrinking Resources](#TOC-Shrinking-Resources)
-* [4 Dependencies, Android Libraries and Multi-project setup](#TOC-Dependencies-Android-Libraries-and-Multi-project-setup)
-    * [4.1 Dependencies on binary packages](#TOC-Dependencies-on-binary-packages)
-        * [4.1.1 Local packages](#TOC-Local-packages)
-        * [4.1.2 Remote artifacts](#TOC-Remote-artifacts)
-    * [4.2 Multi project setup](#TOC-Multi-project-setup)
-    * [4.3 Library projects](#TOC-Library-projects)
-        * [4.3.1 Creating a Library Project](#TOC-Creating-a-Library-Project)
-        * [4.3.2 Differences between a Project and a Library Project](#TOC-Differences-between-a-Project-and-a-Library-Project)
-        * [4.3.3 Referencing a Library](#TOC-Referencing-a-Library)
-        * [4.3.4 Library Publication](#TOC-Library-Publication)
-* [5 Testing](#TOC-Testing)
-    * [5.1 Basics and Configuration](#TOC-Basics-and-Configuration)
-    * [5.2 Running tests](#TOC-Running-tests)
-    * [5.3 Testing Android Libraries](#TOC-Testing-Android-Libraries)
-    * [5.4 Test reports](#TOC-Test-reports)
-        * [5.4.1 Single projects](#TOC-Single-projects)
-        * [5.4.2 Multi-projects reports](#TOC-Multi-projects-reports)
-    * [5.5 Lint support](#TOC-Lint-support)
-* [6 Build Variants](#TOC-Build-Variants)
-    * [6.1 Product flavors](#TOC-Product-flavors)
-    * [6.2 Build Type + Product Flavor = Build Variant](#TOC-Build-Type-Product-Flavor-Build-Variant)
-    * [6.3 Product Flavor Configuration](#TOC-Product-Flavor-Configuration)
-    * [6.4 Sourcesets and Dependencies](#TOC-Sourcesets-and-Dependencies)
-    * [6.5 Building and Tasks](#TOC-Building-and-Tasks)
-    * [6.6 Testing](#TOC-Testing1)
-    * [6.7 Multi-flavor variants](#TOC-Multi-flavor-variants)
-* [7 Advanced Build Customization](#TOC-Advanced-Build-Customization)
-    * [7.1 Build options](#TOC-Build-options)
-        * [7.1.1 Java Compilation options](#TOC-Java-Compilation-options)
-        * [7.1.2 aapt options](#TOC-aapt-options)
-        * [7.1.3 dex options](#TOC-dex-options)
-    * [7.2 Manipulating tasks](#TOC-Manipulating-tasks)
-    * [7.3 BuildType and Product Flavor property reference](#TOC-BuildType-and-Product-Flavor-property-reference)
-    * [7.4 Using sourceCompatibility 1.7](#TOC-Using-sourceCompatibility-1.7)
+        * [3.4.3 签名配置](#343)
+        * [3.4.4 使用混淆](#344)
+        * [3.4.5 清理资源](#345)
+* [4 依赖，Android库工程以及多工程设置](#4)
+    * [4.1 依赖二进制包](#41)
+        * [4.1.1 本地包](#411)
+        * [4.1.2 远程artifacts](#412)
+    * [4.2 Multi project setup](#42)
+    * [4.3 Library projects](#43)
+        * [4.3.1 Creating a Library Project](#431)
+        * [4.3.2 Differences between a Project and a Library Project](#432)
+        * [4.3.3 Referencing a Library](#433)
+        * [4.3.4 Library Publication](#434)
+* [5 Testing](#5)
+    * [5.1 Basics and Configuration](#51)
+    * [5.2 Running tests](#52)
+    * [5.3 Testing Android Libraries](#53)
+    * [5.4 Test reports](#54)
+        * [5.4.1 Single projects](#541)
+        * [5.4.2 Multi-projects reports](#542)
+    * [5.5 Lint support](#55)
+* [6 Build Variants](#6)
+    * [6.1 Product flavors](#61)
+    * [6.2 Build Type + Product Flavor = Build Variant](#62)
+    * [6.3 Product Flavor Configuration](#63)
+    * [6.4 Sourcesets and Dependencies](#64)
+    * [6.5 Building and Tasks](#65)
+    * [6.6 Testing](#66)
+    * [6.7 Multi-flavor variants](#67)
+* [7 Advanced Build Customization](#7)
+    * [7.1 Build options](#71)
+        * [7.1.1 Java Compilation options](#711)
+        * [7.1.2 aapt options](#712)
+        * [7.1.3 dex options](#713)
+    * [7.2 Manipulating tasks](#72)
+    * [7.3 BuildType and Product Flavor property reference](#73)
+    * [7.4 Using sourceCompatibility 1.7](#74)
 
 <a id="1" href="#1"></a>
 
@@ -508,29 +508,188 @@ Android plugin允许自定义这两个示例，并且可以创建其他的 *Buil
 
 <a id="343" href="#343"></a>
 
-#### 3.4.3 Signing Configurations
+#### 3.4.3 签名配置
 
-#### 3.4.4 Running ProGuard
+要对一个应用签名，要求如下：
 
-#### 3.4.5 Shrinking Resources
+* 一个keystore
+* 一个keystore的密码
+* 一个key的别名
+* 一个key的密码
+* 存储类型
 
-## 4 Dependencies, Android Libraries and Multi-project setup
+位置、key别名、key密码以及存储类型一起组成了签名配置( *SigningConfig* 类型)
 
-### 4.1 Dependencies on binary packages
+默认情况下， 已经有了一个 **debug** 的签名配置，它使用了debug keystore，该keystore有一个已知的密码和默认的带有已知密码的key。
+debug keystore位于$HOME/.android/debug.keystore，如果没有会被创建。
 
-#### 4.1.1 Local packages
+**debug** *Build Type* 被设置为自动使用 **debug** 签名配置。
 
-#### 4.1.2 Remote artifacts
+你也可以创建其他的签名配置或者自定义内置的配置。可以通过 **signingConfigs** DSL容器实现。
+
+    android {
+        signingConfigs {
+            debug {
+                storeFile file("debug.keystore")
+            }
+    
+            myConfig {ss
+                storeFile file("other.keystore")
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
+        }
+    
+        buildTypes {
+            foo {
+                debuggable true
+                jniDebuggable true
+                signingConfig signingConfigs.myConfig
+            }
+        }
+    }
+    
+以上片段会把debug keystore的路径改为项目的根目录。这会自动的影响任何用到它的 *Build Types* ，在这里影响到的是 **debug** *Build Type* 。
+
+以前片段也创建了一个新的签名配置，并且被一个新的 *Build Type* 使用。
+
+**注意：** 只有默认路径下的debug keystores才会被自动创建。如果改变了debug keystore的路径将不会在需要的时候创建。创建一个使用不同名字的 *SigningConfig* ，但是用的是默认的debug keystore路径的话是会被自动创建的。也就是说，会不会被自动创建，和keystore的路径有关，和配置的名字无关。
+
+**说明：** 通常情况下，会使用项目根目录的相对路径作为keystores的路径，但有时候也会用绝对路径，虽然这并不推荐(被自动创建的debug keystore除外)。
+
+**注意：如果已经你将这些文件放到版本控制中，你可能不想把密码存储在文件中。Stack Overflow上有个帖子介绍可以从控制台或者环境变量中获取这些密码等信息。**
+
+[http://stackoverflow.com/questions/18328730/how-to-create-a-release-signed-apk-file-using-gradle](http://stackoverflow.com/questions/18328730/how-to-create-a-release-signed-apk-file-using-gradle)
+
+**我们以后更新这个指南的时候会添加更多的信息。**
+
+<a id="344" href="#344"></a>
+
+#### 3.4.4 使用混淆
+
+自从Gradle plugin for ProGuard 4.10版本以后，Gradle开始支持混淆。如果通过Build Type的 *minifyEnabled* 属性配置了使用混淆后，The ProGuard plugin会自动被应用，并且自动创建一些任务。
+
+    android {
+        buildTypes {
+            release {
+                minifyEnabled true
+                proguardFile getDefaultProguardFile('proguard-android.txt')
+            }
+        }
+    
+        productFlavors {
+            flavor1 {
+            }
+            flavor2 {
+                proguardFile 'some-other-rules.txt'
+            }
+        }
+    }
+    
+使用buildTypes以及productFlavors定义的规则文件可以轻松的生成多种版本。
+
+有两个默认的规则文件
+
+* proguard-android.txt
+* proguard-android-optimize.txt
+
+他们位于SDK中，使用getDefaultProguardFile()方法可以返回文件的全路经。除了是否启用优化之外，这两个文件的其他功能都是相同的。
+
+<a id="345" href="#345"></a>
+
+#### 3.4.5 清理资源
+
+在构建的时候，你也可以自动的移除一些未使用的资源。更多信息，请参考[资源清理](resource-shrinking.md)文档
+
+<a id="4" href="#4"></a>
+
+## 4 依赖，Android库工程以及多工程设置
+
+Gradle可以依赖其他的一些组件，这些组建可以是外部二进制包，也可以是其他Gradle工程。
+
+<a id="41" href="#41"></a>
+
+### 4.1 依赖二进制包
+
+<a id="411" href="#411"></a>
+
+#### 4.1.1 本地包
+
+要配置依赖一个外部库jar包，你可以在 **compile** 配置里添加一个依赖。
+
+    dependencies {
+        compile files('libs/foo.jar')
+    }
+    
+    android {
+        ...
+    }
+
+注： **dependencies** DSL元素是标准Gradle API的一部分，并不属于 **android** 的元素。
+
+**compile** 配置用来编译main application，它里面的一切都会被添加到编译的classpath中，并且也会被打包到最终的APK中。
+
+这里还有添加依赖时其他的配置：
+
+* **compile：** main application
+* **androidTestCompile：** test application
+* **debugCompile：** debug Build Type
+* **releaseCompile：** release Build Type
+
+因为要构建生成一个APK，必然会有相关联的 *Build Type* ，APK默认配置了两个(或者更多)编译配置：compile和\<buildtype\>Compile。
+创建一个新的 *Build Type* 的时候会自动创建一个基于它名字的编译配置。
+
+当一个debug版本需要一个自定义库(比如报告崩溃)，但是release版本不需要或者需要一个不同版本的库的时候，会显得非常有用。
+
+<a id="412" href="#412"></a>
+
+#### 4.1.2 远程 artifacts
+
+Gradle支持从Maven和Ivy仓库获取artifacts。
+
+首先必须把库添加到列表中，并且以Maven或者Ivy的定义方式定义需要的依赖。
+
+    repositories {
+        mavenCentral()
+    }
+    
+    
+    dependencies {
+        compile 'com.google.guava:guava:11.0.2'
+    }
+    
+    android {
+        ...
+    }
+    
+注： **mavenCentral()** 是指定仓库URL的快捷方式。Gradle同时支持远程和本地两种仓库
+注：Gradle遵循依赖的传递性。这就意味着如果依赖本身会依赖其他东西，这些也会被拉取过来。
+
+更多关于dependencies的设置信息，请参见Gradle 用户指南[这儿](http://gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html)，以及DSL文档[这儿](http://gradle.org/docs/current/dsl/org.gradle.api.artifacts.dsl.DependencyHandler.htmls)
+
+
+<a id="42" href="#42"></a>
 
 ### 4.2 Multi project setup
 
+<a id="43" href="#43"></a>
+
 ### 4.3 Library projects
+
+<a id="431" href="#431"></a>
 
 #### 4.3.1 Creating a Library Project
 
+<a id="432" href="#432"></a>
+
 #### 4.3.2 Differences between a Project and a Library Project
 
+<a id="433" href="#433"></a>
+
 #### 4.3.3 Referencing a Library
+
+<a id="434" href="#434"></a>
 
 #### 4.3.4 Library Publication
 
