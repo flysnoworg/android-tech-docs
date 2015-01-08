@@ -5,13 +5,13 @@
     * [1.1 新构建系统的目标](#11)
     * [1.2 Gradle是什么?](#12)
 * [2 要求](#2)
-* [3 基础项目](#3)
+* [3 基础工程](#3)
     * [3.1 基本的build文件](#31)
-    * [3.2 项目结构](#32)
+    * [3.2 工程结构](#32)
         * [3.2.1 配置结构](#321)
     * [3.3 构建任务](#33)
         * [3.3.1 通用任务](#331)
-        * [3.3.2 Java项目任务](#332)
+        * [3.3.2 Java工程任务](#332)
         * [3.3.3 Android任务](#333)
     * [3.4 自定义构建](#34)
         * [3.4.1 Manifest选项](#341)
@@ -23,12 +23,12 @@
     * [4.1 依赖二进制包](#41)
         * [4.1.1 本地包](#411)
         * [4.1.2 远程artifacts](#412)
-    * [4.2 Multi project setup](#42)
-    * [4.3 Library projects](#43)
-        * [4.3.1 Creating a Library Project](#431)
-        * [4.3.2 Differences between a Project and a Library Project](#432)
-        * [4.3.3 Referencing a Library](#433)
-        * [4.3.4 Library Publication](#434)
+    * [4.2 多工程设置](#42)
+    * [4.3 库工程](#43)
+        * [4.3.1 创建一个库工程](#431)
+        * [4.3.2 普通工程和库工程的区别](#432)
+        * [4.3.3 引用一个库工程](#433)
+        * [4.3.4 库工程发布](#434)
 * [5 Testing](#5)
     * [5.1 Basics and Configuration](#51)
     * [5.2 Running tests](#52)
@@ -95,7 +95,7 @@ Gradle的以下特性让我们选择了它：
 
 <a id="3" href="#3"></a>
 
-## 3 基础项目
+## 3 基础工程
 
 一个Gradle工程是通过名字叫 *build.gradle* 的文件描述其构建过程的，该文字位于工程的根目录下。
 
@@ -150,11 +150,11 @@ compilation target和旧构建系统中的project.properties文件里 **target**
 
 <a id="32" href="#32"></a>
 
-### 3.2 项目结构
+### 3.2 工程结构
 
 上面说的build文件约定了一个默认的文件夹结构。Gradle遵循约定优先于配置的原则，在可能的情况下提供合理的默认值。
 
-基本的项目始于两个名为"source sets"的部分。也就是main source code 和 test code。他们分别位于：
+基本的工程始于两个名为"source sets"的部分。也就是main source code 和 test code。他们分别位于：
 
 * src/main
 * src/androidTest/
@@ -181,7 +181,7 @@ compilation target和旧构建系统中的project.properties文件里 **target**
 
 #### 3.2.1 配置结构
 
-当默认的项目结构不适用的时候，你可能需要配置它。根据Gradle文档说明，可以通过如下方式重新配置Java项目的 `sourceSets`:
+当默认的工程结构不适用的时候，你可能需要配置它。根据Gradle文档说明，可以通过如下方式重新配置Java工程的 `sourceSets`:
 
     sourceSets {
         main {
@@ -207,7 +207,7 @@ compilation target和旧构建系统中的project.properties文件里 **target**
 
 Android插件也使用相似的语法，但是它有它自己的 *sourceSets* ,这些已经内置在android对象中了。
 
-这儿有个示例，它使用了旧项目结构的源代码，并且重新映射了androidTest *sourceSet* 到测试文件夹：
+这儿有个示例，它使用了旧工程结构的源代码，并且重新映射了androidTest *sourceSet* 到测试文件夹：
 
     android {
         sourceSets {
@@ -231,7 +231,7 @@ Android插件也使用相似的语法，但是它有它自己的 *sourceSets* ,�
 
 这些都是Android特有的，并不适用于Java *sourceSets* 。
 
-这是一个迁移的例子(译者注：比如从旧项目结构迁移过来)。
+这是一个迁移的例子(译者注：比如从旧工程结构迁移过来)。
 
 <a id="33" href="#33"></a>
 
@@ -243,14 +243,14 @@ Android插件也使用相似的语法，但是它有它自己的 *sourceSets* ,�
 
 在构建文件中应用一个插件的时候会自动的创建一系列可运行的构建任务。Java plugin 和 the Android plugin都可以做到这一点。以下是约定的一些任务：
 
-* **assemble** 这个任务会汇集项目的所有输出。
+* **assemble** 这个任务会汇集工程的所有输出。
 * **check** 这个任务会执行所有校验检查
 * **build** 这个任务会同时执行 **assemble** 和 **check** 任务
-* **clean** 这个任务会清理项目的所有输出
+* **clean** 这个任务会清理工程的所有输出
 
 事实上， **assemble** ,  **check** 以及 **build** 这三个任务并没有作任何事情，他们只是插件的引导任务，引导插件添加的其他任务去完成一些工作。
 
-这样就可以允许你调用同样的任务，而不用管它是什么类型的项目或者应用了什么插件。
+这样就可以允许你调用同样的任务，而不用管它是什么类型的工程或者应用了什么插件。
 
 比如，应用 *findbugs* 插件会创建一个任务，并且让 **check** 任务依赖它，这样当这个 **check** 任务被调用的时候，这个新创建的任务也会被调用.
 
@@ -272,7 +272,7 @@ gradle tasks --all
 
 <a id="332" href="#332"></a>
 
-#### 3.3.2 Java项目任务
+#### 3.3.2 Java工程任务
 
 Java plugin创建了两个主要的任务，主要的引导任务都依赖他们。
 
@@ -295,12 +295,12 @@ Java plugin创建了两个主要的任务，主要的引导任务都依赖他们
 
 Android plugin使用了同样的约定规则以和其他插件保持兼容，并且又添加了一些额外的引导任务:
 
-* **assemble** 这个任务会汇集项目的所有输出。
+* **assemble** 这个任务会汇集工程的所有输出。
 * **check** 这个任务会执行所有校验检查
 * **connectedCheck** 运行checks需要一个连接的设备或者模拟器，这些checks将会同时运行在所有连接的设备上。
 * **deviceCheck** 通过API连接远程设备运行checks。它被用于CI(译者注:持续集成)服务器上。
 * **build** 这个任务会同时执行 **assemble** 和 **check** 任务
-* **clean** 这个任务会清理项目的所有输出
+* **clean** 这个任务会清理工程的所有输出
 
 这些新的引导任务是必须的，以便能够在没有连接的设备的情况下运行定期检查。
 
@@ -427,7 +427,7 @@ if (android.defaultConfig.testInstrumentationRunner == null) {
 
 #### 3.4.2 构建类型
 
-默认情况下，Android plugin会自动的设置项目，构建release和debug两个版本。
+默认情况下，Android plugin会自动的设置工程，构建release和debug两个版本。
 他们主要的差异主要在于是否可以在设备上调试应用以及APK如何签名。
 
 debug版本会被使用已知的名称/密码自动生成的密钥/证书签名。release版本在构建过程中不会被签名，需要构建后再签名。
@@ -550,13 +550,13 @@ debug keystore位于$HOME/.android/debug.keystore，如果没有会被创建。
         }
     }
     
-以上片段会把debug keystore的路径改为项目的根目录。这会自动的影响任何用到它的 *Build Types* ，在这里影响到的是 **debug** *Build Type* 。
+以上片段会把debug keystore的路径改为工程的根目录。这会自动的影响任何用到它的 *Build Types* ，在这里影响到的是 **debug** *Build Type* 。
 
 以前片段也创建了一个新的签名配置，并且被一个新的 *Build Type* 使用。
 
 **注意：** 只有默认路径下的debug keystores才会被自动创建。如果改变了debug keystore的路径将不会在需要的时候创建。创建一个使用不同名字的 *SigningConfig* ，但是用的是默认的debug keystore路径的话是会被自动创建的。也就是说，会不会被自动创建，和keystore的路径有关，和配置的名字无关。
 
-**说明：** 通常情况下，会使用项目根目录的相对路径作为keystores的路径，但有时候也会用绝对路径，虽然这并不推荐(被自动创建的debug keystore除外)。
+**说明：** 通常情况下，会使用工程根目录的相对路径作为keystores的路径，但有时候也会用绝对路径，虽然这并不推荐(被自动创建的debug keystore除外)。
 
 **注意：如果已经你将这些文件放到版本控制中，你可能不想把密码存储在文件中。Stack Overflow上有个帖子介绍可以从控制台或者环境变量中获取这些密码等信息。**
 
@@ -666,32 +666,161 @@ Gradle支持从Maven和Ivy仓库获取artifacts。
 注： **mavenCentral()** 是指定仓库URL的快捷方式。Gradle同时支持远程和本地两种仓库
 注：Gradle遵循依赖的传递性。这就意味着如果依赖本身会依赖其他东西，这些也会被拉取过来。
 
-更多关于dependencies的设置信息，请参见Gradle 用户指南[这儿](http://gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html)，以及DSL文档[这儿](http://gradle.org/docs/current/dsl/org.gradle.api.artifacts.dsl.DependencyHandler.htmls)
-
+更多关于dependencies的设置信息，请参见[Gradle 用户指南](http://gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html)，以及[DSL文档](http://gradle.org/docs/current/dsl/org.gradle.api.artifacts.dsl.DependencyHandler.htmls)
 
 <a id="42" href="#42"></a>
 
-### 4.2 Multi project setup
+### 4.2 多工程设置
+
+Gradle工程可以通过多工程配置依赖其他的Gradle工程
+
+多工程配置通常把所有的工程作为根目录的子文件夹。
+
+比如，下面的工程结构：
+
+    MyProject/
+      app/
+      libraries/
+         lib1/
+         lib2/
+
+我们可以识别这三个工程。Gradle会通过如下名字引用他们：
+
+    :app
+    :libraries:lib1
+    :libraries:lib2
+    
+每个工程都有属于它自己的build.gradle文件定义如何构建它自己。
+
+此外，在工程根目录下有个叫 *settings.gradle* 的文件会定义所有工程。
+
+文件结构如下：
+
+    MyProject/
+     settings.gradle
+     app/
+        build.gradle
+     libraries/
+        lib1/
+           build.gradle
+        lib2/
+           build.gradlef
+
+settings.gradle里的内容非常简单：
+
+    include ':app', ':libraries:lib1', ':libraries:lib2'
+    
+这里定义了哪个文件是一个Gradle工程。
+
+**:app** 工程也可能会依赖一些库工程，可以通过如下脚本声明依赖：
+
+dependencies {
+    compile project(':libraries:lib1')
+}
+
+更多关于多工程的配置请参考[这里](http://gradle.org/docs/current/userguide/multi_project_builds.html)
 
 <a id="43" href="#43"></a>
 
-### 4.3 Library projects
+### 4.3 库工程
+
+在上面的多工程配置中，**:libraries:lib1** 和 **:libraries:lib2** 可能是Java工程，并且 **:app** Android工程会用到他们生成的jar报。
+
+但是，如果你想共享访问Android API的代码或者使用Android的样式资源，那么这个库工程就不能是通常的Java工程，而应该是Android库工程。
 
 <a id="431" href="#431"></a>
 
-#### 4.3.1 Creating a Library Project
+#### 4.3.1 创建一个库工程
+
+一个Android库工程和一个Android工程非常相似，只有一点差别。
+
+因为构建一个库和构建一个应用不太一样，所以它使用了一个不同的插件。这两个插件(构建应用和库的)大部分代码都是一样，并且都是通过com.android.tools.build.gradle jar包提供。
+
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    
+        dependencies {
+            classpath 'com.android.tools.build:gradle:0.5.6'
+        }
+    }
+    
+    apply plugin: 'android-library'
+    
+    android {
+        compileSdkVersion 15
+    }
+    
+这里创建一个基于API 15级别编译的库工程。*SourceSets* ，以及依赖的处理方式和应用工程是一样并且可以以同样的方式进行自定义。
 
 <a id="432" href="#432"></a>
 
-#### 4.3.2 Differences between a Project and a Library Project
+#### 4.3.2 普通工程和库工程的不同
+
+库工程的main输出是一个.aar报(这个一个标准的Android存档).它由编译后的代码（比如jar文件或者.so文件）以及资源文件(manifest, res, assets)组成。
+库工程也可以生成一个测试apk，可以独立于应用进行测试。
+
+它有相同的引导任务( **assembleDebug** , **assembleRelease** )，所以他和一般的工程没有什么不同。
+
+其余的，基本上都和应用一样了。他们都有build types和product flavors，可以生成多个版本的aar。
+注意 *Build Type* 大部分配置并不适用于库工程。不过你可以依据库工程是被其他工程依赖还是测试，然后通过自定义库工程 *sourceSet* 改变它的内容。
 
 <a id="433" href="#433"></a>
 
-#### 4.3.3 Referencing a Library
+#### 4.3.3 引用一个库工程
+
+引用一个库工程和引用其他工程是一样的：
+
+    dependencies {
+        compile project(':libraries:lib1')
+        compile project(':libraries:lib2')
+    }
+    
+说明：如果你有多个依赖库工程， 顺序是很重要的。这和旧构建系统中在project.properties文件中定义的依赖顺序是一样的。
 
 <a id="434" href="#434"></a>
 
-#### 4.3.4 Library Publication
+#### 4.3.4 库工程发布
+
+默认情况下库工程只能发布 *release* 版本。这个版本用于所有工程的引用，和工程本身要构建什么样的版本无关。这是属于Gradle的限制，我们正在努力消除这个限制。
+
+你可以通过如下方式控制发布的各种版本
+
+    android {
+        defaultPublishConfig "debug"
+    }
+    
+注意这里的发布配置的名字使用的是一个完整的版本名字。 *Release* 和 *debug* 仅仅适用于没有其他版本的时候使用。如果你想用其他版本代替默认发布的版本，你可以这么做：
+
+    android {
+        defaultPublishConfig "flavor1Debug"
+    }
+    
+发布库工程的所有不同版本也是可能的。我们计划在在一般的工程对工程依赖中(就像上面说的)允许这么做。但是这还不被Gradle允许(我么正在努力修复这个问题)。
+
+默认情况下，没有启用发布所有不同的版本功能，你可以这么启用他们：
+
+    android {
+        publishNonDefault true
+    }
+    
+要意识到，发布多个不同的版本意味着会有多个aar文件，而不是一个aar文件中包含多个不同的版本。每个aar包只包含一个版本。
+发布一个版本意味着要生成一个可用的aar文件作为Gradle工程的输出构件。它既可以被发不到一个maven仓库，也可以被其他工程依赖引用。
+
+Gradle有默认‘构件’的概念，当作如下配置时会用到：
+
+    compile project(':libraries:lib2')
+    
+要创建另外一个已发布构建的依赖，你需要指定需要哪一个：
+
+    dependencies {
+        flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
+        flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
+    }
+    
+**重要：** 注意发布配置的是一个完整的版本，包括build type，并且需要像上面一样被引用。
+**重要：** 当启用了非默认发布的时候，Maven的发布插件将会发布其他版本作为扩展包（按分级）。这意味着和maven上的版本不一定兼容。你应该发布一个单独的版本到仓库中或者为工程间的依赖启用所有的发布配置。
 
 ## 5 Testing
 
