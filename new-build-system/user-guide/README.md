@@ -29,14 +29,14 @@
         * [4.3.2 普通工程和库工程的区别](#432)
         * [4.3.3 引用一个库工程](#433)
         * [4.3.4 库工程发布](#434)
-* [5 Testing](#5)
-    * [5.1 Basics and Configuration](#51)
-    * [5.2 Running tests](#52)
-    * [5.3 Testing Android Libraries](#53)
-    * [5.4 Test reports](#54)
-        * [5.4.1 Single projects](#541)
-        * [5.4.2 Multi-projects reports](#542)
-    * [5.5 Lint support](#55)
+* [5 测试](#5)
+    * [5.1 基本介绍以及配置](#51)
+    * [5.2 运行测试](#52)
+    * [5.3 测试Android库](#53)
+    * [5.4 测试报告](#54)
+        * [5.4.1 单工程报告](#541)
+        * [5.4.2 多工程报告](#542)
+    * [5.5 Lint支持](#55)
 * [6 Build Variants](#6)
     * [6.1 Product flavors](#61)
     * [6.2 Build Type + Product Flavor = Build Variant](#62)
@@ -820,23 +820,203 @@ Gradle有默认‘构件’的概念，当作如下配置时会用到：
     }
     
 **重要：** 注意发布配置的是一个完整的版本，包括build type，并且需要像上面一样被引用。
+
 **重要：** 当启用了非默认发布的时候，Maven的发布插件将会发布其他版本作为扩展包（按分级）。这意味着和maven上的版本不一定兼容。你应该发布一个单独的版本到仓库中或者为工程间的依赖启用所有的发布配置。
 
-## 5 Testing
+## 5 测试
 
-### 5.1 Basics and Configuration
+构建的测试应用已经被集成在应用工程里，不需要再创建一个单独的测试工程。
 
-### 5.2 Running tests
+### 5.1 基础介绍和配置
 
-### 5.3 Testing Android Libraries
+正如上面讲到的， **main** *sourceSet* 的旁边就是 **androidTest** *sourceSet* ，默认的路径是src/androidTest/
+从这个 *sourceSet* 可以构建一个能安装到设备上的测试apk，该apk使用Android测试框架测试应用。这里包括单元测试、集成测试以及后续的UI自动化测试。
+这个测试 *sourceSet* 不必包含AndroidManifest.xml文件，因为它会自动生成。
 
-### 5.4 Test reports
+测试应用有如下值可以配置：
 
-#### 5.4.1 Single projects
+* **testPackageName**
+* **testInstrumentationRunner**
+* **testHandleProfiling**
+* **testFunctionalTest**
 
-#### .4.2 Multi-projects reports
+如前所见，这些可以在 **defaultConfig** 对象里配置。
 
-### 5.5 Lint support
+    android {
+        defaultConfig {
+            testPackageName "com.test.foo"
+            testInstrumentationRunner "android.test.InstrumentationTestRunner"
+            testHandleProfiling true
+            testFunctionalTest true
+        }
+    }
+
+在测试应用的manifest文件中，instrumentation节点的targetPackage属性值会自动的被测试应用的包名填充，即使是通过defaultConfig或者Build Type对象定义的。这也是manifest文件自动生成的一个原因。
+
+此外，*sourceSet* 也可以配置它自己的依赖。
+默认情况下，应用以及它自己的依赖会被添加测试应用的classpath中，但是也可以进行扩展
+
+    dependencies {
+        androidTestCompile 'com.google.guava:guava:11.0.2'
+    }
+    
+测试应用通过 **assembleTest** 任务来构建。它并不依赖main的 **assemble** 任务，并且不能自动调用，需要手动运行。
+
+当前只能同时测试一个 *Build Type* ，默认是 **debug** *Build Type* ，但是也可以被重新配置
+
+    android {
+        ...
+        testBuildType "staging"
+    }
+
+### 5.2 运行测试
+
+正如前面所提到的，引导任务 **connectedCheck** 需要一个已经连接的设备才能运行。
+这会依赖 **androidTest** ，所以 **androidTest** 也会被运行。这个任务做了以下事情：
+
+* 确保应用和测试应用已经被构建(依赖 **assembleDebug** 和 **assembleTest** )
+* 安装这两个应用
+* 运行测试
+* 卸着这两个应用
+
+如果同时有多个连接的设备，那么所有的测试会在所有的设备上运行。不管在哪个设备上，只要有一个测试失败，那么整个构建就是失败的。
+
+所有的测试结果已XML的格式被存储在build/androidTest-results目录下。
+(这类似于jUnit,它的结果存储在build/test-results)目录下)
+
+当然，你可以自己设置
+
+    android {
+        ...
+    
+        testOptions {
+            resultsDir = "$project.buildDir/foo/results"
+        }
+    }
+    
+**android.testOptions.resultsDir** 的值是通过 **Project.file(String)** 得到。
+
+### 5.3 测试Android库
+
+测试Android库工程的方式和应用工程是一样。
+
+仅有的不同就是整个库(包括它的依赖)会作为一个依赖库被自动的添加到测试应用中。测试APK的测试结果不仅包括它自己代码的测试，还包括Android库的以及库的所有依赖的测试。
+库的manifest被合并到测试应用的manifest中(这种情况就和任何工程引用这个库是一样的)
+
+**androidTest** 任务的职责也不一样了，它仅仅负责安装(和卸载)测试APK(因为也没有其他APK需要安装)
+
+其他的都和测试应用差不多。
+
+### 5.4 测试报告
+
+当运行单元测试的时候，Gradle会生成一份HTML报告以便于查看测试结果。
+Android plugins在这个基础上扩展了HTML报告，以合并所有已连接设备上的测试结果。
+
+#### 5.4.1 单工程报告
+
+在运行测试的时候工程会自动的生成报告，默认位置是：
+
+    build/reports/androidTests
+    
+这和jUnit报告的位置build/reports/tests很相似，其他报告的位置通常是build/reports/\<plugin\>/
+
+报告的位置也可以自定义
+
+    android {
+        ...
+    
+        testOptions {
+            reportDir = "$project.buildDir/foo/report"
+        }
+    }
+    
+报告会合并运行在不同设备上的测试结果。
+
+#### 5.4.2 多工程报告
+
+在一个既有应用工程又有库工程的多工程里，当在同时运行所有测试的时候，生成一个包含所有测试结果的报告是非常有用的。
+
+为了达到这一目的，需要同一构件中的另外一个插件，可以通过如下方式应用：
+
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    
+        dependencies {
+            classpath 'com.android.tools.build:gradle:0.5.6'
+        }
+    }
+    
+    apply plugin: 'android-reporting'
+    
+这应该被应用到根目录下,也就是和settings.gradle相邻的build.gradle文件中.
+
+然后,在根目录打开终端,输入如下命令运行所有测试并且收集报告:
+
+    gradle deviceCheck mergeAndroidReports --continue
+    
+注:--continue选项确保所有测试都被执行,即使测试是失败的.否则的话第一个失败的测试会中断运行,那么就可能会有一些工程的测试不会被运行.
+
+### 5.5 Lint支持
+
+从0.7.0版本之后,你可以为一个特定的变种版本运行lint,也可以为所有变种版本都运行.在这种情况下,它会产生一个报告指出给定的变种版本的问题.
+
+你可以像下面一样通过lintOptions自定义lint.一般情况下,你只需要配置其中的一部分.以下是展示所有可用的lint配置项.
+
+    android {
+        lintOptions {
+            // set to true to turn off analysis progress reporting by lint
+            quiet true
+            // if true, stop the gradle build if errors are found
+            abortOnError false
+            // if true, only report errors
+            ignoreWarnings true
+            // if true, emit full/absolute paths to files with errors (true by default)
+            //absolutePaths true
+            // if true, check all issues, including those that are off by default
+            checkAllWarnings true
+            // if true, treat all warnings as errors
+            warningsAsErrors true
+            // turn off checking the given issue id's
+            disable 'TypographyFractions','TypographyQuotes'
+            // turn on the given issue id's
+            enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'
+            // check *only* the given issue id's
+            check 'NewApi', 'InlinedApi'
+            // if true, don't include source code lines in the error output
+            noLines true
+            // if true, show all locations for an error, do not truncate lists, etc.
+            showAll true
+            // Fallback lint configuration (default severities, etc.)
+            lintConfig file("default-lint.xml")
+            // if true, generate a text report of issues (false by default)
+            textReport true
+            // location to write the output; can be a file or 'stdout'
+            textOutput 'stdout'
+            // if true, generate an XML report for use by for example Jenkins
+            xmlReport false
+            // file to write report to (if not specified, defaults to lint-results.xml)
+            xmlOutput file("lint-report.xml")
+            // if true, generate an HTML report (with issue explanations, sourcecode, etc)
+            htmlReport true
+            // optional path to report (default will be lint-results.html in the builddir)
+            htmlOutput file("lint-report.html")
+    
+       // set to true to have all release builds run lint on issues with severity=fatal
+       // and abort the build (controlled by abortOnError above) if fatal issues are found
+       checkReleaseBuilds true
+            // Set the severity of the given issues to fatal (which means they will be
+            // checked during release builds (even if the lint target is not included)
+            fatal 'NewApi', 'InlineApi'
+            // Set the severity of the given issues to error
+            error 'Wakelock', 'TextViewEdits'
+            // Set the severity of the given issues to warning
+            warning 'ResourceAsColor'
+            // Set the severity of the given issues to ignore (same as disabling the check)
+            ignore 'TypographyQuotes'
+        }
+    }
 
 ## 6 Build Variants
 
