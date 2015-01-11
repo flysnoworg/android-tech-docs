@@ -37,14 +37,14 @@
         * [5.4.1 单工程报告](#541)
         * [5.4.2 多工程报告](#542)
     * [5.5 Lint支持](#55)
-* [6 Build Variants](#6)
-    * [6.1 Product flavors](#61)
-    * [6.2 Build Type + Product Flavor = Build Variant](#62)
-    * [6.3 Product Flavor Configuration](#63)
-    * [6.4 Sourcesets and Dependencies](#64)
-    * [6.5 Building and Tasks](#65)
-    * [6.6 Testing](#66)
-    * [6.7 Multi-flavor variants](#67)
+* [6 Build Variants(构建变种版本)](#6)
+    * [6.1 Product flavors(产品定制)](#61)
+    * [6.2 Build Type(构建类型) + Product Flavor(产品定制) = Build Variant(构建变种版本)](#62)
+    * [6.3 Product Flavor Configuration(产品定制配置)](#63)
+    * [6.4 Sourcesets and Dependencies(Sourcesets和依赖)](#64)
+    * [6.5 Building and Tasks(构建和任务)](#65)
+    * [6.6 Testing(测试)](#66)
+    * [6.7 Multi-flavor variants(多种定制的版本)](#67)
 * [7 Advanced Build Customization](#7)
     * [7.1 Build options](#71)
         * [7.1.1 Java Compilation options](#711)
@@ -823,9 +823,13 @@ Gradle有默认‘构件’的概念，当作如下配置时会用到：
 
 **重要：** 当启用了非默认发布的时候，Maven的发布插件将会发布其他版本作为扩展包（按分级）。这意味着和maven上的版本不一定兼容。你应该发布一个单独的版本到仓库中或者为工程间的依赖启用所有的发布配置。
 
+<a id="5" href="#5"></a>
+
 ## 5 测试
 
 构建的测试应用已经被集成在应用工程里，不需要再创建一个单独的测试工程。
+
+<a id="51" href="#51"></a>
 
 ### 5.1 基础介绍和配置
 
@@ -868,6 +872,8 @@ Gradle有默认‘构件’的概念，当作如下配置时会用到：
         ...
         testBuildType "staging"
     }
+    
+<a id="52" href="#52"></a>
 
 ### 5.2 运行测试
 
@@ -896,6 +902,8 @@ Gradle有默认‘构件’的概念，当作如下配置时会用到：
     
 **android.testOptions.resultsDir** 的值是通过 **Project.file(String)** 得到。
 
+<a id="53" href="#53"></a>
+
 ### 5.3 测试Android库
 
 测试Android库工程的方式和应用工程是一样。
@@ -907,10 +915,14 @@ Gradle有默认‘构件’的概念，当作如下配置时会用到：
 
 其他的都和测试应用差不多。
 
+<a id="54" href="#54"></a>
+
 ### 5.4 测试报告
 
 当运行单元测试的时候，Gradle会生成一份HTML报告以便于查看测试结果。
 Android plugins在这个基础上扩展了HTML报告，以合并所有已连接设备上的测试结果。
+
+<a id="541" href="#541"></a>
 
 #### 5.4.1 单工程报告
 
@@ -931,6 +943,8 @@ Android plugins在这个基础上扩展了HTML报告，以合并所有已连接�
     }
     
 报告会合并运行在不同设备上的测试结果。
+
+<a id="542" href="#542"></a>
 
 #### 5.4.2 多工程报告
 
@@ -957,6 +971,8 @@ Android plugins在这个基础上扩展了HTML报告，以合并所有已连接�
     gradle deviceCheck mergeAndroidReports --continue
     
 注:--continue选项确保所有测试都被执行,即使测试是失败的.否则的话第一个失败的测试会中断运行,那么就可能会有一些工程的测试不会被运行.
+
+<a id="55" href="#55"></a>
 
 ### 5.5 Lint支持
 
@@ -1018,34 +1034,308 @@ Android plugins在这个基础上扩展了HTML报告，以合并所有已连接�
         }
     }
 
-## 6 Build Variants
+<a id="6" href="#6"></a>
 
-### 6.1 Product flavors
+## 6 Build Variants(构建变种版本)
 
-### 6.2 Build Type + Product Flavor = Build Variant
+新构建系统的目标之一就是为同一个应用创建不同的版本。
 
-### 6.3 Product Flavor Configuration
+主要有两个使用场景：
 
-### 6.4 Sourcesets and Dependencies
+1. 同一个应用的不同版本。比如一个免费的版本和一个付费的专业版本。
+2. 同一个应用被打包成多个不同的apk以发布到Google Play商店。详情请见<http://developer.android.com/google/play/publishing/multiple-apks.html>
+3. 综合第1条和第2条。
 
-### 6.5 Building and Tasks
+我们的目标就是基于同一个工程生成不同的APK，而不是使用一个单独的库工程和两个以上的应用工程组合生成APK的方式。
 
-### 6.6 Testing
+<a id="61" href="#61"></a>
 
-### 6.7 Multi-flavor variants
+### 6.1 Product flavors(产品定制)
+
+一个product flavor定义了可以通过工程构建应用的自定义版本。一个独立的工程可以定义不同的flavor改变生成的应用。
+
+这种被设计的新概念对于版本间差异非常小的时候很有用。如果“这是同一个应用吗？”的答案是肯定的话，那么这种方式的确比使用库工程的方式要好得多。(译者注：以前的方法要生成多个包，可能是从采用多个不同的应用工程+一个库工程的方式，现在这种新的方式比我们以前的老方式好多了)
+
+Product flavors 是通过 **productFlavors** DSL容器定义的：
+
+    android {
+        ....
+    
+        productFlavors {
+            flavor1 {
+                ...
+            }
+    
+            flavor2 {
+                ...
+            }
+        }
+    }
+    
+这里创建了两个flavors，分别是flavor1和flavor2.
+注意：flavors的名字不能和已存在的 *Build Type* 名字或者 **androidTest** *sourceSet* 冲突。
+
+<a id="62" href="#62"></a>
+
+### 6.2 Build Type(构建类型) + Product Flavor(产品定制) = Build Variant(构建变种版本)
+
+正如我们前面看到的，每一个 *Build Type* 都会生成一个新的APK。
+
+*Product Flavors* 也是这么做的：工程的输出将会尽可能的组合 *Build Types* 和 *Product Flavors* 的输出。
+
+每一种组合(Build Type, Product Flavor)就是 *构建变种*
+
+比如，以默认的 **debug** 和 **release** *Build Types* 为例，上面的例子会生成四个 *Build Variants* ：
+
+* Flavor1 - debug
+* Flavor1 - release
+* Flavor2 - debug
+* Flavor2 - release
+
+没有flavors的工程仍然是有 *Build Variants* 的，只是使用的是默认的flavor和配置，并且没有名字，所以variants的列表看起来和Build Types列表一样。
+
+<a id="63" href="#63"></a>
+
+### 6.3 Product Flavor Configuration(产品定制配置)
+
+每一个flavors都可以通过一个闭包配置：
+
+    android {
+        ...
+    
+        defaultConfig {
+            minSdkVersion 8
+            versionCode 10
+        }
+    
+        productFlavors {
+            flavor1 {
+                packageName "com.example.flavor1"
+                versionCode 20
+            }
+    
+            flavor2 {
+                packageName "com.example.flavor2"
+                minSdkVersion 14
+            }
+        }
+    }
+
+要知道的是 **android.productFlavors.*** 是 *ProductFlavor* 类型的，和 **android.defaultConfig** 对象具有相同的类型，者意味着他们有相同的属性。
+
+**defaultConfig** 为所有的flavor提供了基本的配置，每一个flavor也都可以重新设置覆盖这些默认值。在上面的例子中，最终的配置如下：
+
+* flavor1
+    * packageName: com.example.flavor1
+    * minSdkVersion: 8
+    * versionCode: 20
+* flavor2
+    * packageName: com.example.flavor2
+    * minSdkVersion: 14
+    * versionCode: 10
+
+通常情况下，*Build Type* 配置会覆盖其他配置，比如，*Build Type* 的 **packageNameSuffix** 会追加到 *Product Flavor* 的 **packageName** 之后。
+
+也有一些情况是在 *Build Type* 和 *Product Flavor* 中都可以设置，在这种情况下，视情况而定。
+
+比如， **signingConfig** 就是这么一个属性。
+通过设置 **android.buildTypes.release.signingConfig** ，可以为所有的release包共享相同的SigningConfig，也可以单独通过设置android.productFlavors.*.signingConfig为每一个release包指定他们自己的 *SigningConfig* 。
+
+<a id="64" href="#64"></a>
+
+### 6.4 Sourcesets and Dependencies(Sourcesets和依赖)
+
+类似 *Build Types* ， *Product Flavors* 也可以通过他们自己的 *sourceSets* 控制代码和资源。
+
+上面的例子会创建4个 *sourceSets* ：
+
+* **android.sourceSets.flavor1** ，位置是src/flavor1/
+* **android.sourceSets.flavor2** ，位置是src/flavor2/
+* **android.sourceSets.androidTestFlavor1** ，位置是src/androidTestFlavor1/
+* **android.sourceSets.androidTestFlavor2** ，位置是src/androidTestFlavor2/
+
+这些 *sourceSets* 和 **android.sourceSets.main** 以及 *Build Type sourceSet* 一起构建APK。
+
+当处理所有的 *sourcesets* 以构建一个单独的APK的时候，下面的规则会被应用：
+
+* 所有的源代码(src/*/java)会以多文件夹的方式一起被使用生成一个输出。
+* 所有Manifest文件会合并成一个manifest文件。这允许 *Product Flavors* 有一些不同的组件定义或者权限声明，类似于 *Build Types* 。
+* 所有的资源(Android res和assets)都会遵循优先级覆盖的原则， *Build Type* 会覆盖 *Product Flavorg* ，最后又都会覆盖 **main** *sourceSet* .
+* 每一个 *Build Variant* 会基于资源生成他们自己的R类(或者生成其他的源代码)，variant之间不会共享。
+
+最后，像 *Build Types, Product Flavors* 也可以有他们自己的依赖。比如，如果flavor用来生成一个广告app和一个付费的app，其中一个flavor可能需要依赖一个广告SDK，另外一个则不需要。
+
+    dependencies {
+        flavor1Compile "..."
+    }
+
+在这种特定的情况下，src/flavor1/AndroidManifest.xml文件可能需要包含访问网络的权限声明。
+
+此外，也会为每一个variant创建一个sourcesets：
+
+* **android.sourceSets.flavor1Debug** ,位置是src/flavor1Debug/
+* **android.sourceSets.flavor1Release** ,位置是src/flavor1Release/
+* **android.sourceSets.flavor2Debug** ,位置是src/flavor2Debug/
+* **android.sourceSets.flavor2Release** ,位置是src/flavor2Release/
+
+这些sourcesets拥有比build type更高的优先级，并且允许在variant级别上做一些定制。
+
+<a id="65" href="#65"></a>
+
+### 6.5 Building and Tasks(构建和任务)
+
+我们在前面说过，每一个 *Build Type* 都会创建它自己的 assemble\<name\>任务,但是Build Variants的任务则是Build Type和Product Flavor的组合。
+
+当Product Flavors被使用的时候，更多的assemble-type任务被创建，他们是：
+
+1. assemble\<Variant Name\> 允许直接构建一个variant版本。例如 **assembleFlavor1Debug**
+2. assemble\<Build Type Name\> 允许根据给定的Build Type构建所有的APK。例如 **assembleDebug** 会同时构建Flavor1Debug和Flavor2Debug两个variant版本。
+3. assemble\<Product Flavor Name\> 允许根据给定的flavor构建所有的APK。例如 **assembleFlavor1** 会同时构建Flavor1Debug和Flavor1Release两个variant版本。
+
+**assemble** 任务会尽可能的构建所有variant版本。
+
+<a id="66" href="#66"></a>
+
+### 6.6 Testing(测试)
+
+测试多flavor工程和测试普通的工程差不多。
+
+**androidTest** sourceset对所有的flavor来说是通用的测试，而每个flavor也可以有他们自己的测试。
+
+正如前面所提到的，每一个flavor都可以创建自己的测试 *sourceSets* ：
+
+* **android.sourceSets.androidTestFlavor1** ，位置是src/androidTestFlavor1/
+* **android.sourceSets.androidTestFlavor2** ，位置是src/androidTestFlavor2/
+
+同样的，他们也可以有他们自己的依赖：
+
+    dependencies {
+        androidTestFlavor1Compile "..."
+    }
+    
+运行测试可以通过主的 **deviceCheck** 引导任务，当使用flavor的时候，也可以通过主的 **androidTest** 引导任务来执行。
+
+每一个flavor都有他们自己运行测试的任务：androidTest\<VariantName\>。例如：
+
+* **androidTestFlavor1Debug**
+* **androidTestFlavor2Debug**
+
+同样的，每一个variant也都有测试APK任务、安装以及卸载任务：
+
+* **assembleFlavor1Test**
+* **installFlavor1Debug**
+* **installFlavor1Test**
+* **uninstallFlavor1Debug**
+* ...
+
+最终的HTML报告会根据flavor合并生成。
+
+测试结果以及报告的位置如下，第一个是每个flavor的结果，然后是合并起来的：
+
+* build/androidTest-results/flavors/\<FlavorName\>
+* build/androidTest-results/all/
+* build/reports/androidTests/flavors\<FlavorName\>
+* build/reports/androidTests/all/
+
+自定义路径的话，也只是改变根目录，仍然会创建每个flavor的子文件夹并且合并测试结果以及报告。
+
+<a id="67" href="#67"></a>
+
+### 6.7 Multi-flavor variants(多种定制的版本)
+
+有些情况下，人们想基于不同的标准创建同一应用的几个不同的版本。
+例如，Google Play里的multi-apk支持4种不同的过滤器。为每一个过滤器创建不同的APK就需要用到多维度的 *Product Flavor*了。
+
+考虑到一个游戏有一个演示版本和一个付费版本，并且在multi-apk支持中需要用到ABI过滤器。3个ABI和两个版本的情况下，就会有6个APK生成(没有计算不同的Build Type的variant版本)。
+然而，对于三个ABI来说，他们的付费版本的代码都是一样的，因此只是简单的创建6个flavor并不是一个好办法。
+相反的，使用两个flavor维度，并且自动构建所有可能的variants。
+
+这个功能通过Flavor Dimensions能实现。Flavors会被指定到特定的维度。
+
+    android {
+        ...
+    
+        flavorDimensions "abi", "version"
+    
+        productFlavors {
+            freeapp {
+                flavorDimension "version"
+                ...
+            }
+    
+            x86 {
+                flavorDimension "abi"
+                ...
+            }
+        }
+    }
+    
+**android.flavorDimensions** 数据定义了可能用到的唯独以及顺序。每一个定义的 *Product Flavor* 都会被指定一个纬度。
+
+从Product Flavors [freeapp, paidapp]、[x86, arm, mips]、[debug, release] Build Types维度，会有以下build variant被创建：
+
+* x86-freeapp-debug
+* x86-freeapp-release
+* arm-freeapp-debug
+* arm-freeapp-release
+* mips-freeapp-debug
+* mips-freeapp-release
+* x86-paidapp-debug
+* x86-paidapp-release
+* arm-paidapp-debug
+* arm-paidapp-release
+* mips-paidapp-debug
+* mips-paidapp-release
+
+通过 **android.flavorDimensions** 定义的维度的顺序是非常重要的。
+
+每一个variant都会被如下几个 *Product Flavor* 对象配置：
+
+* **android.defaultConfig**
+* abi维度
+* version维度
+
+维度的顺序决定了哪一个flavor会覆盖哪一个flavor，这对于资源来说非常重要，因为flavor会替换掉定义在低优先级flavor中的值。
+flavor维度首先使用高优先级的定义。在这里是：
+
+    abi > version > defaultConfig
+    
+Multi-flavors工程也有额外的sourcesets。类似variant的sourcesets，只是没有build type。
+
+* **android.sourceSets.x86Freeapp** ，位置是src/x86Freeapp/
+* **android.sourceSets.armPaidapp** ，位置是src/armPaidapp/
+* 等等...
+
+这允许你在flavor-combination级别上进行定制。他们比普通的flavor sourcesets优先级高，但是比build type sourcesets优先级低。
+
+<a id="7" href="#7"></a>
 
 ## 7 Advanced Build Customization
 
+<a id="71" href="#71"></a>
+
 ### 7.1 Build options
+
+<a id="711" href="#711"></a>
 
 #### 7.1.1 Java Compilation options
 
+<a id="712" href="#712"></a>
+
 #### 7.1.2 aapt options
+
+<a id="713" href="#713"></a>
 
 #### 7.1.3 dex options
 
+<a id="72" href="#72"></a>
+
 ### 7.2 Manipulating tasks
 
+<a id="73" href="#73"></a>
+
 ### 7.3 BuildType and Product Flavor property reference
+
+<a id="74" href="#74"></a>
 
 ### 7.4 Using sourceCompatibility 1.7
