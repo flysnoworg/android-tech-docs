@@ -45,14 +45,14 @@
     * [6.5 Building and Tasks(构建和任务)](#65)
     * [6.6 Testing(测试)](#66)
     * [6.7 Multi-flavor variants(多种定制的版本)](#67)
-* [7 Advanced Build Customization](#7)
-    * [7.1 Build options](#71)
-        * [7.1.1 Java Compilation options](#711)
-        * [7.1.2 aapt options](#712)
-        * [7.1.3 dex options](#713)
-    * [7.2 Manipulating tasks](#72)
-    * [7.3 BuildType and Product Flavor property reference](#73)
-    * [7.4 Using sourceCompatibility 1.7](#74)
+* [7 高级构建定制](#7)
+    * [7.1 构建选项](#71)
+        * [7.1.1 Java编译选项](#711)
+        * [7.1.2 aapt选项](#712)
+        * [7.1.3 dex选项](#713)
+    * [7.2 操纵任务](#72)
+    * [7.3 BuildType and Product Flavor的属性参考](#73)
+    * [7.4 使用sourceCompatibility 1.7](#74)
 
 <a id="1" href="#1"></a>
 
@@ -1310,32 +1310,216 @@ Multi-flavors工程也有额外的sourcesets。类似variant的sourcesets，只�
 
 <a id="7" href="#7"></a>
 
-## 7 Advanced Build Customization
+## 7 高级构建定制
 
 <a id="71" href="#71"></a>
 
-### 7.1 Build options
+### 7.1 构建选项
 
 <a id="711" href="#711"></a>
 
-#### 7.1.1 Java Compilation options
+#### 7.1.1 Java编译选项
+
+    android {
+        compileOptions {
+            sourceCompatibility = "1.6"
+            targetCompatibility = "1.6"
+        }
+    }
+    
+默认值是1.6。这个设置会影响所有编译java源代码的任务。
 
 <a id="712" href="#712"></a>
 
-#### 7.1.2 aapt options
+#### 7.1.2 aapt选项
+
+    android {
+        aaptOptions {
+            noCompress 'foo', 'bar'
+            ignoreAssetsPattern "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
+        }
+    }
+    
+这会影响所有使用appt的任务。
 
 <a id="713" href="#713"></a>
 
-#### 7.1.3 dex options
+#### 7.1.3 dex选项
+
+    android {
+        dexOptions {
+            incremental false
+            preDexLibraries = false
+            jumboMode = false
+            javaMaxHeapSize "2048M"
+        }
+    }
+    
+这会影响所有使用dex的任务
 
 <a id="72" href="#72"></a>
 
-### 7.2 Manipulating tasks
+### 7.2 操纵任务
+
+普通的Java工程有一个有限的任务集合，这些任务相互配合创建一个输出。
+**classes** 是一个编译Java源代码的任务。
+在build.gradle中通过脚本访问和使用classes任务是很简单的。可以通过project.tasks.classes快捷访问。
+
+对于Android工程来说就比较复杂了，因为可能有很多相同的任务，他们的名字是基于 *Build Types和Product Flavors* 生成的。
+
+为了解决这个问题， **android** 对象提供了两个属性：
+
+* applicationVariants (仅仅适用于app plugin)
+* libraryVariants (仅仅适用于library plugin)
+* testVariants (两种plugin都适用)
+
+ApplicationVariant, LibraryVariant, and TestVariant这三个对象都会分别返回一个[DomainObjectCollection](http://www.gradle.org/docs/current/javadoc/org/gradle/api/DomainObjectCollection.html)。
+
+请注意访问这些集合中的任何一个都会触发生成所有的创建。这意味着访问这些集合后无须重新配置就会产生。
+
+DomainObjectCollection允许直接的访问所有对象，或者通过更为方便的过滤器访问。
+
+    android.applicationVariants.each { variant ->
+        ....
+    }
+    
+这三个variant类都具有以下属性：
+
+属性名|属性类型|说明
+-----|-------|---
+name |String |variant的名字，必须是唯一的。
+description|String|variant的可读性的描述
+dirName|String|variant的子文件夹名称，必须是惟一的。可能还不止一个，比如 “debug/flavor1”
+baseName|String|variant输出的的基本名称，必须是唯一的。
+outputFile|File|variant的输出，是一个可读写的属性
+processManifest|ProcessManifest|处理manifest的任务
+aidlCompile|AidlCompile|编译AIDL文件的任务
+renderscriptCompile|RenderscriptCompile|编译Renderscript文件的任务
+mergeResources|MergeResources|合并资源的任务
+mergeAssets|MergeAssets|合并资源的任务
+processResources|ProcessAndroidResources|处理和编译资源的任务
+generateBuildConfig|GenerateBuildConfig|生成BuildConfig类的任务
+javaCompile|JavaCompile|编译Java代码的任务
+processJavaResources|Copy|处理Java资源的任务
+assemble|DefaultTask|这个variant的assemble引导任务
+
+ApplicationVariant类还有以下属性：
+
+属性名|属性类型|说明
+-----|-------|---
+buildType |BuildType |variant的BuildType。
+productFlavors|List\<ProductFlavor\>|variant的ProductFlavors，不能为空，但可以是空值
+mergedFlavor|ProductFlavor|android.defaultConfig和variant.productFlavors合并
+signingConfig|SigningConfig|这个variant使用的SigningConfig对象
+isSigningReady|boolean|如果为true则说明variant已经具备签名所需的一切信息
+testVariant|BuildVariant|将会测试这个variant的TestVariant
+dex|Dex|dex代码的任务，如果variant是一个库可以为null
+packageApplication|PackageApplication|生成最终AP看的任务，如果variant是一个库可以为null
+zipAlign|ZipAlign|zip压缩apk的任务，如果variant是一个库或者APK不能被签名可以为null
+install|DefaultTask|安装任务，可以为null。
+uninstall|DefaultTask|卸载任务
+
+LibraryVariant类还有以下属性：
+
+属性名|属性类型|说明
+-----|-------|---
+buildType|BuildType|variant的BuildType
+mergedFlavor|ProductFlavor|就是defaultConfig
+testVariant|BuildVariant|将要测试这个variant的Build Variant
+packageLibrary|Zip|把库打包成一个AAR存档的任务，如果不是一个库值为Null
+
+TestVariant类还有以下属性：
+
+属性名|属性类型|说明
+-----|-------|---
+buildType |BuildType |variant的BuildType。
+productFlavors|List\<ProductFlavor\>|variant的ProductFlavors，不能为空，但可以是空值
+mergedFlavor|ProductFlavor|android.defaultConfig和variant.productFlavors合并
+signingConfig|SigningConfig|这个variant使用的SigningConfig对象
+isSigningReady|boolean|如果为true则说明variant已经具备签名所需的一切信息
+testVariant|BaseVariant|将会测试这个variant的BaseVariant
+dex|Dex|dex代码的任务，如果variant是一个库可以为null
+packageApplication|PackageApplication|生成最终AP看的任务，如果variant是一个库可以为null
+zipAlign|ZipAlign|zip压缩apk的任务，如果variant是一个库或者APK不能被签名可以为null
+install|DefaultTask|安装任务，可以为null。
+uninstall|DefaultTask|卸载任务
+connectedAndroidTest|DefaultTask|在已连接的设备上运行android测试的任务
+providerAndroidTest|DefaultTask|使用扩展的API运行android测试的任务
+
+Android特定任务类型的API
+
+* ProcessManifest
+    * File manifestOutputFile
+* AidlCompile
+    * File sourceOutputDir
+* RenderscriptCompile
+    * File sourceOutputDir
+    * File resOutputDir
+* MergeResources
+    * File outputDir
+* MergeAssets
+    * File outputDir
+* ProcessAndroidResources
+    * File manifestFile
+    * File resDir
+    * File assetsDir
+    * File sourceOutputDir
+    * File textSymbolOutputDir
+    * File packageOutputFile
+    * File proguardOutputFile
+* GenerateBuildConfig
+    * File sourceOutputDir
+* Dex
+    * File outputFolder
+* PackageApplication
+    * File resourceFile
+    * File dexFile
+    * File javaResourceDir
+    * File jniDir
+    * File outputFile
+        * To change the final output file use "outputFile" on the variant object directly.
+* ZipAlign
+    * File inputFile
+    * File outputFile
+        * To change the final output file use "outputFile" on the variant object directly.
+
+每一个任务类型的API都会因为Gradle的工作方式以及Android plugin的设置受到限制。
+首先，Gradle限制只能配置任务的输入/输出以及一些可选的标志。所以，这里的这些任务只能定义输入/输出。
+
+其次，大多数任务的输入并不唯一，通常会混合sourceSets，Build Types以及Product Flavors。为了保持构建简单以及可读性，我们的目标是让开发者通过DSL通过这些对象修改构建，而不是深入的了解任务的输入和选项进而修改它们。
+
+还要注意的是，除了ZipAlign任务类型，其他所有的任务都需要设置私有数据让他们运行。这就意味着不能基于这些类型手动的创建新的任务。
+
+对于Gradle的任务（DefaultTask, JavaCompile, Copy, Zip），请参考Gradle文档。
 
 <a id="73" href="#73"></a>
 
-### 7.3 BuildType and Product Flavor property reference
+### 7.3 BuildType and Product Flavor的属性参考
+
+即将推出。
+对于Gradle的任务（DefaultTask, JavaCompile, Copy, Zip），请参考Gradle文档。
 
 <a id="74" href="#74"></a>
 
-### 7.4 Using sourceCompatibility 1.7
+### 7.4 使用sourceCompatibility 1.7
+
+基于Android KitKat (buildToolsVersion 19)开发的时候，你能用diamond operator, multi-catch, strings in switches, try with resources等等这些新的特性。要做到这些，你需要把下面的配置添加到你的构建文件中：
+
+    android {
+        compileSdkVersion 19
+        buildToolsVersion "19.0.0"
+    
+        defaultConfig {
+            minSdkVersion 7
+            targetSdkVersion 19
+        }
+    
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_7
+            targetCompatibility JavaVersion.VERSION_1_7
+        }
+    }
+    
+需要注意的是你也可以把 **minSdkVersion** 设置为19之前的版本，这样的话你只能使用除try with resources之外的语言特性。如果你想使用try with resources，你需要设置 **minSdkVersion** 为19。
+
+你还需要确认Gradle使用的JDK1.7或者之后的版本。（并且Android Gradle plugin同样也需要0.6.1或者之后的版本）

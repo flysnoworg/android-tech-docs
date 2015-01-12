@@ -2,7 +2,7 @@
 
 我们正在研发一个新的构建系统以替代ADT+Ant的构建模式。
 
-* [Gradle插件使用指南](user-guide/README.md)(进行中)
+* [Gradle插件使用指南](user-guide/README.md)(已完成)
     * [Manifest Merger](user-guide/manifest-merger.md)(new in 0.10)
     * [Apk Splits](user-guide/apk-splits.md)(new in 0.13)
     * [Tips](tips.md)
