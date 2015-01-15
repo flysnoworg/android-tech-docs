@@ -1,4 +1,8 @@
-﻿目录
+﻿以下内容由[飞雪无情](http://www.flysnow.org)提供翻译
+
+原文地址 <http://tools.android.com/tech-docs/new-build-system/user-guide>
+
+目录
 -----
 
 * [1 介绍](#1)
