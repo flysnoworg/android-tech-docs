@@ -7,7 +7,7 @@
     * [Apk Splits](user-guide/apk-splits.md)(new in 0.13)
     * [Tips](tips.md)
 * Tech Docs
-    * [aar format](aar-format.md)
+    * [aar文件格式](aar-format.md)
     * [Resources/Assets merging mechanism](resource-merging.md)
     * Migrating from [Eclipse Projects](migrating-from-eclipse-projects.md) or [IntelliJ Projects](migrating-from-intellij-projects.md)
     * [Migrating to version 1.0.0 from older Gradle projects](migrating-to-1-0-0.md)
