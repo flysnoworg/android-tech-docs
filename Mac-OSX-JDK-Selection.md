@@ -4,12 +4,12 @@
 
 
 Android Studio需要两个不同的JDK：
-＊ IDE工具自己运行所需要的Java版
-＊ 提供Java编译器的JDK版
+* IDE工具自己运行所需要的Java版
+* 提供Java编译器的JDK版
 
 这两者可以为（通常也是）同一个，当然你也可以单独配置它们。但是在OSX系统上有点特殊，它们需要使用不同的JDK。
 
-＃## 工程JDK
+### 工程的JDK
 
 你可以在工程结构对话框中配置用来编译代码的JDK，这个JDK将用来获得一个编译你的代码的编译器。如果你正在使用compileSdkVersion大于或等于21的版本构建项目的话，你应该使用JDK7或者JDK8。你也可以通过编辑工程里的local.properties文件来配置JDK的路径。
 
@@ -38,11 +38,11 @@ $ open /Applications/Android\ Studio.app
 
 （如果你对他们的区别比较好奇：Java6通过Quartz来执行渲染工作，除了轻微的改变颜色之外，字体也是通过亚像素液晶抗锯齿来渲染的。这有可能是JDK的一个bug，<https://bugs.openjdk.java.net/browse/JDK-8023794>）。
 
-＃## 安装Java6
+### 安装Java6
 
 如果你双击Android Studio的安装包，Mac OSX可能会自动出现一个安装Java的对话框。如果没有的话，你可以从下面的页面下载获得：<http://support.apple.com/kb/DL1572>
 
-＃## Mac OSX 10.10的一些问题
+### Mac OSX 10.10的一些问题
 
 据说在Mac OSX 10.10中运行Android Studio会有图形绘制和其他的一些bug。
 
