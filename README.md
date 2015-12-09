@@ -8,6 +8,8 @@ Android官方技术文档翻译,原文[Android Tech Docs](http://tools.android.c
 * 邮箱：<ls8707@gmail.com>
 * 博客：[http://www.flysnow.org/](http://www.flysnow.org/)
 
+想参与翻译的朋友看这里[https://github.com/rujews/android-tech-docs/issues/3](https://github.com/rujews/android-tech-docs/issues/3)
+
 以下是文档目录：
 
 * [Ant 任务](ant-tasks.md)
