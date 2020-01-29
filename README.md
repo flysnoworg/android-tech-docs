@@ -14,7 +14,6 @@ Android官方技术文档翻译,原文[Android Tech Docs](http://tools.android.c
 ## 联系方式
 
 * 联系人：飞雪无情
-* 邮箱：<ls8707@gmail.com>
 * 博客：[http://www.flysnow.org/](http://www.flysnow.org/)
 
 ![扫码关注](qrcode_for_weixin.jpg)
